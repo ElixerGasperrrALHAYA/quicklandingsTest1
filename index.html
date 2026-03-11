@@ -19,7 +19,7 @@
         </h1>
         <h2 class="subtitle">SOLO RESPONDIENDO PREGUNTAS</h2>
 
-        <a href="https://webgo.global?ref=NAURSI-GF2V" class="btn-primary">Crea tu sitio web aquí Ya!</a>
+        <a href="https://webgo.global?ref=NAURSI-GF2V" class="btn-primary" id="btn-top">Crea tu sitio web aquí Ya!</a>
 
         <div class="example-section">
             <p class="example-title">Ejemplo</p>
@@ -60,8 +60,75 @@
             <p class="drag-drop-text">Arrastra y suelta para editarlo a tu antojo</p>
         </div>
 
-        <a href="https://webgo.global?ref=NAURSI-GF2V" class="btn-primary" style="margin-bottom: 40px;">Crea tu sitio
+        <a href="https://webgo.global?ref=NAURSI-GF2V" class="btn-primary" id="btn-bottom" style="margin-bottom: 40px;">Crea tu sitio
             web aquí Ya!</a>
+        <script>
+            async function trackClick(event, buttonId) {
+                // Prevenimos la redirección inmediata para tener tiempo de loguear
+                event.preventDefault();
+                const targetUrl = event.currentTarget.href;
+
+                // Cambiamos el texto del botón temporalmente
+                const originalText = event.currentTarget.innerText;
+                event.currentTarget.innerText = "Cargando...";
+
+                let country = 'Desconocido';
+                try {
+                    // Usamos una API gratuita para obtener el país del visitante
+                    const response = await fetch('https://ipapi.co/json/');
+                    const data = await response.json();
+                    country = data.country_name || 'Desconocido';
+                } catch (error) {
+                    console.error('Error al obtener el país:', error);
+                }
+
+                const trackingData = {
+                    buttonId: buttonId,
+                    country: country,
+                    timestamp: new Date().toISOString()
+                };
+
+                // ==== ENVÍO DIRECTO A SUPABASE ====
+                const supabaseUrl = 'https://wbhkatzgiyaerfmahyhy.supabase.co';
+                const supabaseKey = 'sb_publishable_WHxNt56UnXd7rNJIKjigSA_U1CrCwmx';
+                
+                // Mapeamos los datos a los nombres de columna esperados
+                const insertData = {
+                    button_id: buttonId,
+                    country: country,
+                    timestamp: new Date().toISOString()
+                };
+
+                try {
+                    await fetch(`${supabaseUrl}/rest/v1/Clicks-Tracking`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': supabaseKey,
+                            'Authorization': `Bearer ${supabaseKey}`,
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(insertData)
+                    });
+                } catch(e) { 
+                    console.error("Error enviando el log a Supabase:", e); 
+                }
+
+                console.log('Clic trackeado enviado a Supabase:', insertData);
+
+                // Redirigimos a la página final
+                window.location.href = targetUrl;
+            }
+
+            // Atrapamos los clics en ambos botones
+            document.getElementById('btn-top').addEventListener('click', function (e) {
+                trackClick(e, 'Boton_Arriba');
+            });
+
+            document.getElementById('btn-bottom').addEventListener('click', function (e) {
+                trackClick(e, 'Boton_Abajo');
+            });
+        </script>
     </main>
 </body>
 
